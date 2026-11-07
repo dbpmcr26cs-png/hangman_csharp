@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.IO;
+using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 
 //LOAD LEXICON
@@ -63,6 +64,59 @@ static string selectWord(int diffSetting, string[] words)
 string guess = selectWord(diffSetting, words);
 
 Console.WriteLine($"Your word is: {guess}");
+
+/*
+// GAME BOARD
+
+    ________________
+    |       |
+    |       |
+    |       o
+    |      /|\
+    |      / \
+    |_________________
+   /|\               |
+__/_|_\______________|___
+*/
+
+string[] gallow =
+["   ________________",
+"    |",
+"    |",
+"    |",
+"    |",
+"    |",
+"    |_________________",
+"   /|\\               |",
+"__/_|_\\______________|___"];
+
+string[] head = gallow;
+head[1] = "    |       |";
+head[2] = head[1];
+head[3] = "    |       o";
+
+string[] body = head;
+body[4] = body[1];
+
+string[] leftArm = body;
+leftArm[4] = "    |      /|";
+
+string[] rightArm = leftArm;
+rightArm[4] = "    |      /|\\";
+
+string[] leftLeg = rightArm;
+leftLeg[5] = "    |      /";
+
+string[] rightLeg = leftLeg;
+rightLeg[5] = "    |      / \\";
+
+
+foreach (string segment in gallow)
+{
+    // Console.Clear();
+    Console.WriteLine($"{segment}");
+}
+
 
 // string selectedWord = fiveToSix.ElementAt(Random.Shared.Next(fiveToSix.Count()));
 
