@@ -25,7 +25,8 @@ static int gameStart()
         Console.WriteLine("    2.) Medium");
         Console.WriteLine("    3.) Hard");
         string input = Console.ReadLine();
-        if (int.TryParse(input, out diffSetting) && diffSetting is 1 or 2 or 3) {
+        if (int.TryParse(input, out diffSetting) && diffSetting is 1 or 2 or 3)
+        {
             gameDiff = true;
         }
         else
@@ -42,7 +43,7 @@ int diffSetting = gameStart();
 
 static string selectWord(int diffSetting, string[] words)
 {
-    switch(diffSetting)
+    switch (diffSetting)
     {
         case 1:
             IEnumerable<string> easyLexicon =
@@ -61,9 +62,9 @@ static string selectWord(int diffSetting, string[] words)
     }
 }
 
-string guess = selectWord(diffSetting, words);
+string secretWord = selectWord(diffSetting, words);
 
-Console.WriteLine($"Your word is: {guess}");
+Console.WriteLine($"Your word is: {secretWord}");
 
 /*
 // GAME BOARD
@@ -90,35 +91,82 @@ string[] gallow =
 "   /|\\               |",
 "__/_|_\\______________|___"];
 
-string[] head = gallow;
+string[] head = gallow.ToArray();
 head[1] = "    |       |";
 head[2] = head[1];
 head[3] = "    |       o";
 
-string[] body = head;
+string[] body = head.ToArray();
 body[4] = body[1];
 
-string[] leftArm = body;
+string[] leftArm = body.ToArray();
 leftArm[4] = "    |      /|";
 
-string[] rightArm = leftArm;
+string[] rightArm = leftArm.ToArray();
 rightArm[4] = "    |      /|\\";
 
-string[] leftLeg = rightArm;
+string[] leftLeg = rightArm.ToArray();
 leftLeg[5] = "    |      /";
 
-string[] rightLeg = leftLeg;
+string[] rightLeg = leftLeg.ToArray();
 rightLeg[5] = "    |      / \\";
 
+string[][] gamestate = [gallow, head, body, leftArm, rightArm, leftLeg, rightLeg];
 
-foreach (string segment in gallow)
+
+
+// Game State
+
+foreach (string segment in gamestate[0])
 {
     // Console.Clear();
     Console.WriteLine($"{segment}");
 }
 
 
-// string selectedWord = fiveToSix.ElementAt(Random.Shared.Next(fiveToSix.Count()));
+//REMEMBER TO ACCOUNT FOR DOUBLE LETTERS IN WORD
+// Game is won when correctGuesses matches all UNIQUE letters in secretword
 
 //GAME LOOP
-// while livesLeft(lives) > 0://
+int wrongGuess = 0;
+List<char> correctGuesses = new List<char> {};
+
+while (wrongGuess < gamestate.Length)
+{
+    char letterGuess = getLetterGuess(correctGuesses);
+    /*
+    if checkLetterGuess(letterGuess);
+    {
+        
+        // Show all guessed letters in the game loop, if correctGuesses equals length then game over
+    }
+    */
+    wrongGuess++;
+}
+
+//User Input
+static char getLetterGuess(List<char> correctGuesses)
+{
+    while (true) {
+        string letter = Console.ReadLine();
+        if (char.TryParse(letter, out char letterGuess) && isValidLetter(letterGuess))
+        {
+            if (!correctGuesses.Contains(letterGuess))
+            {
+                correctGuesses.Add(letterGuess);
+                return letterGuess;
+            }
+        }
+    }
+}
+
+static bool isValidLetter(char letter)
+{
+    return (letter >= 'a' && letter <= 'z') ||
+        (letter >= 'A' && letter <= 'Z');
+}
+
+bool checkLetterGuess(guess)
+{
+    correct
+}
