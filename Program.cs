@@ -1,7 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.CodeDom.Compiler;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
+using System.Net.NetworkInformation;
 using System.Reflection.Metadata;
+using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks.Dataflow;
 
 //LOAD LEXICON
 string path = "/Users/vasco1/Documents/Game Dev/C# Practice/hangman/";
@@ -78,6 +82,8 @@ Console.WriteLine($"Your word is: {secretWord}");
     |_________________
    /|\               |
 __/_|_\______________|___
+
+    _ _ _ _ _ _ _ _
 */
 
 string[] gallow =
@@ -129,7 +135,9 @@ foreach (string segment in gamestate[0])
 
 //GAME LOOP
 int wrongGuess = 0;
-List<char> correctGuesses = new List<char> {};
+List<char> correctGuesses = new List<char> { };
+//REMOVE correct guesses - we can jsut check word answer to see what's already been guessed
+List<char> wordAnswer = new List<char> {};
 
 while (wrongGuess < gamestate.Length)
 {
@@ -147,7 +155,8 @@ while (wrongGuess < gamestate.Length)
 //User Input
 static char getLetterGuess(List<char> correctGuesses)
 {
-    while (true) {
+    while (true)
+    {
         string letter = Console.ReadLine();
         if (char.TryParse(letter, out char letterGuess) && isValidLetter(letterGuess))
         {
@@ -166,7 +175,74 @@ static bool isValidLetter(char letter)
         (letter >= 'A' && letter <= 'Z');
 }
 
-bool checkLetterGuess(guess)
+bool checkLetterGuess(char guess, string secretWord)
 {
-    correct
+    if (secretWord.Contains(guess))
+    {
+        //NOT SURE IF NEXT PART IS NEEDED
+        foreach (int i in letterIndex(guess, secretWord))
+        {
+            correctGuesses[i] = guess;
+        }
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
+List<int> letterIndex(char guess, string secretWord)
+{
+    List<int> letterIndices = new List<int> { };
+    for (int i = 0; i < secretWord.Length; i++)
+    {
+        if (guess == secretWord[i])
+        {
+            letterIndices.Add(i);
+        }
+    }
+    return letterIndices;
+}
+
+void generateSpacesAndWriteToConsole(List<char> wordAnswer)
+{
+    if (wordAnswer.Count == 0 || !wordAnswer.Any())
+    {
+        return;
+    }
+    else
+    {
+        foreach (char c in wordAnswer)
+        {
+            Console.Write($"{c} ");
+        }
+        return;
+    }
+}
+
+// Used to generate the ____ used in game - need to add spaces between still
+List<char> generateAnsweredWordUI(string secretword, List<char> wordAnswer, char? guess = null )
+{
+    if (guess==null && (wordAnswer.Count == 0 || !wordAnswer.Any()))
+    {
+        for (int c = 0; c < secretword.Length; c++)
+        {
+            wordAnswer.Add('_');
+        }
+        return wordAnswer;
+    }
+    else if (guess != null)
+    {
+       foreach (int i in letterIndex(guess.Value, secretword))
+        {
+            wordAnswer[i] = guess.Value;
+        }
+        return wordAnswer;
+    }
+    else
+    {
+        return wordAnswer;
+    }
 }
