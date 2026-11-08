@@ -120,13 +120,20 @@ rightLeg[5] = "    |      / \\";
 string[][] gamestate = [gallow, head, body, leftArm, rightArm, leftLeg, rightLeg];
 
 
+// Wrong Guesses
 
-// Game State
 
-foreach (string segment in gamestate[0])
+// Game State - draws the gallow based on gamestate (number of wrong guesses)
+static void makeGallow(string[][] gamestate, List<char> wrongGuess)
 {
-    // Console.Clear();
-    Console.WriteLine($"{segment}");
+    Console.Clear();
+    Console.WriteLine("\n   ");
+    // Gamestate and gallow drawing is based on number of wrong guesses so far
+    foreach (string segment in gamestate[wrongGuess.Count])
+    {
+        Console.WriteLine($"{segment}");
+    }
+    return;
 }
 
 
@@ -134,37 +141,73 @@ foreach (string segment in gamestate[0])
 // Game is won when correctGuesses matches all UNIQUE letters in secretword
 
 //GAME LOOP
-int wrongGuess = 0;
-List<char> correctGuesses = new List<char> { };
-//REMOVE correct guesses - we can jsut check word answer to see what's already been guessed
-List<char> wordAnswer = new List<char> {};
+List<char> wordAnswer = new List<char> { };
+List<char> wrongGuess = new List<char> { };
 
-while (wrongGuess < gamestate.Length)
+// Call after running code to populate wordAnswer with "_"
+bool gameover(List<char> wrongGuess, List<char> wordAnswer, string[][] gamestate)
 {
-    char letterGuess = getLetterGuess(correctGuesses);
-    /*
-    if checkLetterGuess(letterGuess);
+    if (wordAnswer.Count > 0 && !wordAnswer.Contains('_'))
     {
-        
-        // Show all guessed letters in the game loop, if correctGuesses equals length then game over
+        Console.WriteLine("Congratulations! You Won!");
+        return true;
     }
-    */
-    wrongGuess++;
+    else if (wrongGuess.Count >= gamestate.Length-1)
+    {
+        Console.WriteLine("Sorry, you lost!");
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
-//User Input
-static char getLetterGuess(List<char> correctGuesses)
+
+void mainGame()
+{
+    //Initial Set-up of Gameboard
+    makeGallow(gamestate, wrongGuess);
+    wordAnswer = generateAnsweredWord(secretWord, wordAnswer);
+
+    // Main Game Loop
+    while (!gameover(wrongGuess, wordAnswer, gamestate))
+    {
+        //Player Letter Guess
+        char letterGuess = getLetterGuess(wordAnswer, wrongGuess);
+
+        // Redraw Board w/Guess and Answered Word Updated
+        (wordAnswer, wrongGuess) = updateGamestate(letterGuess, secretWord, wordAnswer, wrongGuess);
+        makeGallow(gamestate, wrongGuess);
+        
+        //logic is wrong because it generates anaswered word draws it and then makes gallow after
+    
+    }
+    return;
+}
+
+
+// Take user's input for letter guess and checks for valid input --> outputs character
+static char getLetterGuess(List<char> wordAnswer, List<char> wrongGuess)
 {
     while (true)
     {
+        Console.WriteLine("\nEnter a valid letter for your guess:");
         string letter = Console.ReadLine();
         if (char.TryParse(letter, out char letterGuess) && isValidLetter(letterGuess))
         {
-            if (!correctGuesses.Contains(letterGuess))
+            if (!wordAnswer.Contains(letterGuess) && !wrongGuess.Contains(letterGuess))
             {
-                correctGuesses.Add(letterGuess);
                 return letterGuess;
             }
+            else
+            {
+                Console.WriteLine("You already guessed this letter. Try Again!");
+            }
+        }
+        else
+        {
+            Console.WriteLine("Invalid letter. Try Again!");
         }
     }
 }
@@ -175,24 +218,28 @@ static bool isValidLetter(char letter)
         (letter >= 'A' && letter <= 'Z');
 }
 
-bool checkLetterGuess(char guess, string secretWord)
+
+
+// UPDATE GAMESTATE - inputs valid character as guess, checks to see if it's correct guess,
+// and updates gamestate accordingly
+// guess, secretWord, gamestate, wordAnswerm wrongGuess -->  gamestate, wordAnswer, wrongGuess
+(List<char>, List<char>) updateGamestate(char letterGuess, string secretWord, List<char> wordAnswer, List<char> wrongGuess)
 {
-    if (secretWord.Contains(guess))
+    // CORRECT GUESS: If guess is in secretWord --> updates wordAnswer
+    if (secretWord.Contains(letterGuess))
     {
-        //NOT SURE IF NEXT PART IS NEEDED
-        foreach (int i in letterIndex(guess, secretWord))
-        {
-            correctGuesses[i] = guess;
-        }
-        return true;
+        wordAnswer = generateAnsweredWord(secretWord, wordAnswer, letterGuess);
     }
+    // INCORRECT GUESS: Else --> updates wrongGuess & Gamestate (only update gamestate if guess is wrong)
     else
     {
-        return false;
+        wrongGuess.Add(letterGuess);
     }
+    return (wordAnswer, wrongGuess);
 }
 
 
+// Get indices of letter guess in the secretWord
 List<int> letterIndex(char guess, string secretWord)
 {
     List<int> letterIndices = new List<int> { };
@@ -206,6 +253,8 @@ List<int> letterIndex(char guess, string secretWord)
     return letterIndices;
 }
 
+// Used to generate spaces between letters
+// when displaying correct guesses on screen
 void generateSpacesAndWriteToConsole(List<char> wordAnswer)
 {
     if (wordAnswer.Count == 0 || !wordAnswer.Any())
@@ -222,23 +271,27 @@ void generateSpacesAndWriteToConsole(List<char> wordAnswer)
     }
 }
 
-// Used to generate the ____ used in game - need to add spaces between still
-List<char> generateAnsweredWordUI(string secretword, List<char> wordAnswer, char? guess = null )
+// Updates wordAnswer and prints to console
+List<char> generateAnsweredWord(string secretWord, List<char> wordAnswer, char? guess = null)
 {
-    if (guess==null && (wordAnswer.Count == 0 || !wordAnswer.Any()))
+    // First time through - generates blank word spaces
+    if (guess == null && (wordAnswer.Count == 0 || !wordAnswer.Any()))
     {
-        for (int c = 0; c < secretword.Length; c++)
+        for (int c = 0; c < secretWord.Length; c++)
         {
             wordAnswer.Add('_');
         }
+        generateSpacesAndWriteToConsole(wordAnswer);
         return wordAnswer;
     }
+    // Updates wordAndswer and prints to console
     else if (guess != null)
     {
-       foreach (int i in letterIndex(guess.Value, secretword))
+        foreach (int i in letterIndex(guess.Value, secretWord))
         {
             wordAnswer[i] = guess.Value;
         }
+        generateSpacesAndWriteToConsole(wordAnswer);
         return wordAnswer;
     }
     else
