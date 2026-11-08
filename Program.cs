@@ -1,67 +1,11 @@
 ﻿using System.IO;
 
-//LOAD LEXICON
-string path = AppContext.BaseDirectory();
+//IMPORT LEXICON
+string lexicon_path = Path.Combine(AppContext.BaseDirectory, "1k_lexicon.txt");
 
-string[] words = File.ReadAllText($"{path}/1k_lexicon.txt")
+string[] words = File.ReadAllText(lexicon_path)
     .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
 
-
-//GAME START
-static int gameStart()
-{
-    bool gameDiff = false;
-    int diffSetting = 0;
-
-    Console.Clear();
-
-    while (!gameDiff)
-    {
-        Console.WriteLine("Choose game difficulty:");
-        Console.WriteLine("    1.) Easy");
-        Console.WriteLine("    2.) Medium");
-        Console.WriteLine("    3.) Hard");
-        string? input = Console.ReadLine();
-        if (int.TryParse(input, out diffSetting) && diffSetting is 1 or 2 or 3)
-        {
-            gameDiff = true;
-        }
-        else
-        {
-            Console.Clear();
-            Console.WriteLine("Must choose a valid number between 1 and 3.\n");
-        }
-    }
-    return diffSetting;
-}
-
-// SELECT WORD BASED ON DIFFICULTY
-int diffSetting = gameStart();
-
-static string selectWord(int diffSetting, string[] words)
-{
-    switch (diffSetting)
-    {
-        case 1:
-            IEnumerable<string> easyLexicon =
-                words.Where(word => word.Length >= 5 && word.Length < 7);
-            return easyLexicon.ElementAt(Random.Shared.Next(easyLexicon.Count()));
-        case 2:
-            IEnumerable<string> midLexicon =
-                words.Where(word => word.Length >= 7 && word.Length < 9);
-            return midLexicon.ElementAt(Random.Shared.Next(midLexicon.Count()));
-        case 3:
-            IEnumerable<string> hardLexicon =
-                words.Where(word => word.Length >= 9);
-            return hardLexicon.ElementAt(Random.Shared.Next(hardLexicon.Count()));
-        default:
-            throw new ArgumentException("Difficulty must be 1, 2, or 3!");
-    }
-}
-
-string secretWord = selectWord(diffSetting, words).ToLower();
-
-Console.WriteLine($"Your word is: {secretWord}");
 
 /*
 // GAME BOARD
@@ -113,55 +57,25 @@ rightLeg[5] = "    |      / \\";
 string[][] gamestate = [gallow, head, body, leftArm, rightArm, leftLeg, rightLeg];
 
 
-// Wrong Guesses
+///////////////////////////
+///// GAME CODE BELOW /////
+///////////////////////////
+
+int diffSetting = gameStart();
+string secretWord = selectWord(diffSetting, words).ToLower();
 
 
-// Game State - draws the gallow based on gamestate (number of wrong guesses)
-static void makeGallow(string[][] gamestate, List<char> wrongGuess)
-{
-    Console.Clear();
-    Console.WriteLine("\n");
-    // Gamestate and gallow drawing is based on number of wrong guesses so far
-    foreach (string segment in gamestate[wrongGuess.Count])
-    {
-        Console.WriteLine($"{segment}");
-    }
-    return;
-}
-
-
-//GAME LOOP
 List<char> wordAnswer = new List<char> { };
 List<char> wrongGuess = new List<char> { };
 
-// Gameover conditon that will end main gameloop
-bool gameover(List<char> wrongGuess, List<char> wordAnswer, string[][] gamestate, string secretWord)
-{
-    if (wordAnswer.Count > 0 && !wordAnswer.Contains('_'))
-    {
-        Console.WriteLine("Congratulations! You Won!");
-        return true;
-    }
-    else if (wrongGuess.Count >= gamestate.Length-1)
-    {
-        Console.WriteLine("Sorry, you lost!");
-        Console.WriteLine($"\nThe secret word was: {secretWord.ToUpper()}");
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-
+// MAIN GAME CODE //
 void mainGame()
 {
     //Initial Set-up of Gameboard
     makeGallow(gamestate, wrongGuess);
     wordAnswer = generateAnsweredWord(secretWord, wordAnswer);
 
-    // Main Game Loop
+    // MAIN GAME LOOP
     while (!gameover(wrongGuess, wordAnswer, gamestate, secretWord))
     {
         //Player Letter Guess
@@ -179,18 +93,57 @@ void mainGame()
     return;
 }
 
-
-void printWrongGuesses(List<char> wrongGuess)
+/// START OF GAME ///
+static int gameStart()
 {
-    Console.Write("\n\nIncorrect Guesses: ");
-    foreach (char l in wrongGuess)
+    bool gameDiff = false;
+    int diffSetting = 0;
+
+    Console.Clear();
+
+    while (!gameDiff)
     {
-        Console.Write($"{l}, ");
+        Console.WriteLine("Choose game difficulty:");
+        Console.WriteLine("    1.) Easy");
+        Console.WriteLine("    2.) Medium");
+        Console.WriteLine("    3.) Hard");
+        string? input = Console.ReadLine();
+        if (int.TryParse(input, out diffSetting) && diffSetting is 1 or 2 or 3)
+        {
+            gameDiff = true;
+        }
+        else
+        {
+            Console.Clear();
+            Console.WriteLine("Must choose a valid number between 1 and 3.\n");
+        }
     }
-    Console.WriteLine("");
-    return;
+    return diffSetting;
 }
 
+// Select word based on difficulty
+static string selectWord(int diffSetting, string[] words)
+{
+    switch (diffSetting)
+    {
+        case 1:
+            IEnumerable<string> easyLexicon =
+                words.Where(word => word.Length >= 5 && word.Length < 7);
+            return easyLexicon.ElementAt(Random.Shared.Next(easyLexicon.Count()));
+        case 2:
+            IEnumerable<string> midLexicon =
+                words.Where(word => word.Length >= 7 && word.Length < 9);
+            return midLexicon.ElementAt(Random.Shared.Next(midLexicon.Count()));
+        case 3:
+            IEnumerable<string> hardLexicon =
+                words.Where(word => word.Length >= 9);
+            return hardLexicon.ElementAt(Random.Shared.Next(hardLexicon.Count()));
+        default:
+            throw new ArgumentException("Difficulty must be 1, 2, or 3!");
+    }
+}
+
+// USER INPUT & VALDIATION //
 // Take user's input for letter guess and checks for valid input --> outputs character
 static char getLetterGuess(List<char> wordAnswer, List<char> wrongGuess)
 {
@@ -217,6 +170,7 @@ static char getLetterGuess(List<char> wordAnswer, List<char> wrongGuess)
     }
 }
 
+// Checks if character is valid input (true/false)
 static bool isValidLetter(char letter)
 {
     return (letter >= 'a' && letter <= 'z') ||
@@ -224,6 +178,9 @@ static bool isValidLetter(char letter)
 }
 
 
+
+
+// UPDATE GAME DATA //
 
 // UPDATE GAMESTATE - checks to see if valid character is correct guess and updates corresponding wordlist
 // guess, secretWord, wordAnswerm wrongGuess -->  wordAnswer, wrongGuess
@@ -242,45 +199,11 @@ static bool isValidLetter(char letter)
     return (wordAnswer, wrongGuess);
 }
 
-
-// Get indices of letter guess in the secretWord
-List<int> letterIndex(char guess, string secretWord)
-{
-    List<int> letterIndices = new List<int> { };
-    for (int i = 0; i < secretWord.Length; i++)
-    {
-        if (guess == secretWord[i])
-        {
-            letterIndices.Add(i);
-        }
-    }
-    return letterIndices;
-}
-
-// Used to generate spaces between letters
-// when displaying correct guesses on screen
-void generateSpacesAndWriteToConsole(List<char> wordAnswer)
-{
-    Console.Write("   ");
-    if (wordAnswer.Count == 0 || !wordAnswer.Any())
-    {
-        return;
-    }
-    else
-    {
-        foreach (char c in wordAnswer)
-        {
-            Console.Write($"{c} ");
-        }
-        return;
-    }
-}
-
 // Updates wordAnswer and prints to console
 List<char> generateAnsweredWord(string secretWord, List<char> wordAnswer, char? guess = null)
 {
     // First time through - generates blank word spaces
-    if (guess == null && (wordAnswer.Count == 0 || !wordAnswer.Any()))
+    if (guess == null && wordAnswer.Count == 0)
     {
         for (int c = 0; c < secretWord.Length; c++)
         {
@@ -303,5 +226,91 @@ List<char> generateAnsweredWord(string secretWord, List<char> wordAnswer, char? 
         return wordAnswer;
     }
 }
+
+// Get indices of letter guess in the secretWord
+List<int> letterIndex(char guess, string secretWord)
+{
+    List<int> letterIndices = new List<int> { };
+    for (int i = 0; i < secretWord.Length; i++)
+    {
+        if (guess == secretWord[i])
+        {
+            letterIndices.Add(i);
+        }
+    }
+    return letterIndices;
+}
+
+// GAME OVER CONDITIONS //
+// Gameover conditon that will end main gameloop
+bool gameover(List<char> wrongGuess, List<char> wordAnswer, string[][] gamestate, string secretWord)
+{
+    if (wordAnswer.Count > 0 && !wordAnswer.Contains('_'))
+    {
+        Console.WriteLine("Congratulations! You Won!");
+        return true;
+    }
+    else if (wrongGuess.Count >= gamestate.Length-1)
+    {
+        Console.WriteLine("Sorry, you lost!");
+        Console.WriteLine($"\nThe secret word was: {secretWord.ToUpper()}");
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
+// UPDATE GAME DISPLAY //
+// Draws the gallow based on gamestate (number of wrong guesses)
+static void makeGallow(string[][] gamestate, List<char> wrongGuess)
+{
+    Console.Clear();
+    Console.WriteLine("\n");
+    // Gamestate and gallow drawing is based on number of wrong guesses so far
+    foreach (string segment in gamestate[wrongGuess.Count])
+    {
+        Console.WriteLine($"{segment}");
+    }
+    return;
+}
+
+// Used to generate spaces between letters
+// when displaying correct guesses on screen
+void generateSpacesAndWriteToConsole(List<char> wordAnswer)
+{
+    Console.Write("   ");
+    if (wordAnswer.Count == 0 || !wordAnswer.Any())
+    {
+        return;
+    }
+    else
+    {
+        foreach (char c in wordAnswer)
+        {
+            Console.Write($"{c} ");
+        }
+        return;
+    }
+}
+
+// Prints incorrect guesses at bottom of console
+void printWrongGuesses(List<char> wrongGuess)
+{
+    Console.Write("\n\nIncorrect Guesses: ");
+    foreach (char l in wrongGuess)
+    {
+        Console.Write($"{l}, ");
+    }
+    Console.WriteLine("");
+    return;
+}
+
+
+
+//Just for debugging:
+// Console.WriteLine($"Your word is: {secretWord}");
 
 mainGame();
