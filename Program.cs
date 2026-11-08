@@ -61,12 +61,10 @@ string[][] gamestate = [gallow, head, body, leftArm, rightArm, leftLeg, rightLeg
 ///// GAME CODE BELOW /////
 ///////////////////////////
 
-int diffSetting = gameStart();
-string secretWord = selectWord(diffSetting, words).ToLower();
-
 
 List<char> wordAnswer = new List<char> { };
 List<char> wrongGuess = new List<char> { };
+string secretWord = "";
 
 // MAIN GAME CODE //
 void mainGame()
@@ -75,7 +73,7 @@ void mainGame()
     makeGallow(gamestate, wrongGuess);
     wordAnswer = generateAnsweredWord(secretWord, wordAnswer);
 
-    // MAIN GAME LOOP
+    // INNER GAME LOOP
     while (!gameover(wrongGuess, wordAnswer, gamestate, secretWord))
     {
         //Player Letter Guess
@@ -83,10 +81,10 @@ void mainGame()
 
         // Redraw Board w/Guess and Answered Word Updated
         (wordAnswer, wrongGuess) = updateGamestate(letterGuess, secretWord, wordAnswer, wrongGuess);
-        makeGallow(gamestate, wrongGuess);        
+        makeGallow(gamestate, wrongGuess);
         // Writes out the correct guesses and unknown letters so far
         generateSpacesAndWriteToConsole(wordAnswer);
-        
+
         // Prints Wrong Guesses at bottom of console window
         printWrongGuesses(wrongGuess);
     }
@@ -250,7 +248,7 @@ bool gameover(List<char> wrongGuess, List<char> wordAnswer, string[][] gamestate
         Console.WriteLine("Congratulations! You Won!");
         return true;
     }
-    else if (wrongGuess.Count >= gamestate.Length-1)
+    else if (wrongGuess.Count >= gamestate.Length - 1)
     {
         Console.WriteLine("Sorry, you lost!");
         Console.WriteLine($"\nThe secret word was: {secretWord.ToUpper()}");
@@ -310,7 +308,47 @@ void printWrongGuesses(List<char> wrongGuess)
 
 
 
-//Just for debugging:
-// Console.WriteLine($"Your word is: {secretWord}");
+//REPLAY GAME
+bool replayGameLoop()
+{
+    while (true)
+    {
+        Console.WriteLine("\nStart new game? (y/n)");
+        string? letter = Console.ReadLine();
+        if (char.TryParse(letter, out char contGame) && isValidLetter(contGame))
+        {
+            contGame = char.ToLower(contGame);
+            if (contGame == 'y')
+            {
+                wordAnswer.Clear();
+                wrongGuess.Clear();
 
-mainGame();
+                return true;
+            }
+            else if (contGame == 'n')
+            {
+                return false;
+            }
+            else
+            {
+                Console.Clear();
+                continue;
+            }
+        }
+        Console.WriteLine("Invalid Choice. Please choose only 'y' or 'n'!");
+    }
+}
+
+
+// CODE TO RUN GAME //
+do
+{
+    int diffSetting = gameStart();
+    secretWord = selectWord(diffSetting, words).ToLower();
+
+    //Just for debugging:
+    // Console.WriteLine($"Your word is: {secretWord}");
+
+    mainGame();
+}
+while (replayGameLoop());
