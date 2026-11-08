@@ -66,7 +66,7 @@ static string selectWord(int diffSetting, string[] words)
     }
 }
 
-string secretWord = selectWord(diffSetting, words);
+string secretWord = selectWord(diffSetting, words).ToLower();
 
 Console.WriteLine($"Your word is: {secretWord}");
 
@@ -127,7 +127,7 @@ string[][] gamestate = [gallow, head, body, leftArm, rightArm, leftLeg, rightLeg
 static void makeGallow(string[][] gamestate, List<char> wrongGuess)
 {
     Console.Clear();
-    Console.WriteLine("\n   ");
+    Console.WriteLine("\n");
     // Gamestate and gallow drawing is based on number of wrong guesses so far
     foreach (string segment in gamestate[wrongGuess.Count])
     {
@@ -178,14 +178,27 @@ void mainGame()
 
         // Redraw Board w/Guess and Answered Word Updated
         (wordAnswer, wrongGuess) = updateGamestate(letterGuess, secretWord, wordAnswer, wrongGuess);
-        makeGallow(gamestate, wrongGuess);
-        
+        makeGallow(gamestate, wrongGuess);        
         //logic is wrong because it generates anaswered word draws it and then makes gallow after
-    
+        generateSpacesAndWriteToConsole(wordAnswer);
+        
+        // still need to print incorrect guesses at bottom
+        printWrongGuesses(wrongGuess);
     }
     return;
 }
 
+
+void printWrongGuesses(List<char> wrongGuess)
+{
+    Console.Write("\n\nIncorrect Guesses: ");
+    foreach (char l in wrongGuess)
+    {
+        Console.Write($"{l}, ");
+    }
+    Console.WriteLine("");
+    return;
+}
 
 // Take user's input for letter guess and checks for valid input --> outputs character
 static char getLetterGuess(List<char> wordAnswer, List<char> wrongGuess)
@@ -198,7 +211,7 @@ static char getLetterGuess(List<char> wordAnswer, List<char> wrongGuess)
         {
             if (!wordAnswer.Contains(letterGuess) && !wrongGuess.Contains(letterGuess))
             {
-                return letterGuess;
+                return char.ToLower(letterGuess);
             }
             else
             {
@@ -220,9 +233,8 @@ static bool isValidLetter(char letter)
 
 
 
-// UPDATE GAMESTATE - inputs valid character as guess, checks to see if it's correct guess,
-// and updates gamestate accordingly
-// guess, secretWord, gamestate, wordAnswerm wrongGuess -->  gamestate, wordAnswer, wrongGuess
+// UPDATE GAMESTATE - checks to see if valid character is correct guess and updates corresponding wordlist
+// guess, secretWord, wordAnswerm wrongGuess -->  wordAnswer, wrongGuess
 (List<char>, List<char>) updateGamestate(char letterGuess, string secretWord, List<char> wordAnswer, List<char> wrongGuess)
 {
     // CORRECT GUESS: If guess is in secretWord --> updates wordAnswer
@@ -257,6 +269,7 @@ List<int> letterIndex(char guess, string secretWord)
 // when displaying correct guesses on screen
 void generateSpacesAndWriteToConsole(List<char> wordAnswer)
 {
+    Console.WriteLine("\n   ");
     if (wordAnswer.Count == 0 || !wordAnswer.Any())
     {
         return;
@@ -291,7 +304,6 @@ List<char> generateAnsweredWord(string secretWord, List<char> wordAnswer, char? 
         {
             wordAnswer[i] = guess.Value;
         }
-        generateSpacesAndWriteToConsole(wordAnswer);
         return wordAnswer;
     }
     else
@@ -299,3 +311,5 @@ List<char> generateAnsweredWord(string secretWord, List<char> wordAnswer, char? 
         return wordAnswer;
     }
 }
+
+mainGame();
