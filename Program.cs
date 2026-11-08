@@ -1,16 +1,9 @@
-﻿using System.CodeDom.Compiler;
-using System.ComponentModel.DataAnnotations;
-using System.IO;
-using System.Net.NetworkInformation;
-using System.Reflection.Metadata;
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks.Dataflow;
+﻿using System.IO;
 
 //LOAD LEXICON
-string path = "/Users/vasco1/Documents/Game Dev/C# Practice/hangman/";
+string path = AppContext.BaseDirectory();
 
-string[] words = File.ReadAllText($"{path}1k_lexicon.txt")
+string[] words = File.ReadAllText($"{path}/1k_lexicon.txt")
     .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
 
 
@@ -28,7 +21,7 @@ static int gameStart()
         Console.WriteLine("    1.) Easy");
         Console.WriteLine("    2.) Medium");
         Console.WriteLine("    3.) Hard");
-        string input = Console.ReadLine();
+        string? input = Console.ReadLine();
         if (int.TryParse(input, out diffSetting) && diffSetting is 1 or 2 or 3)
         {
             gameDiff = true;
@@ -137,15 +130,12 @@ static void makeGallow(string[][] gamestate, List<char> wrongGuess)
 }
 
 
-//REMEMBER TO ACCOUNT FOR DOUBLE LETTERS IN WORD
-// Game is won when correctGuesses matches all UNIQUE letters in secretword
-
 //GAME LOOP
 List<char> wordAnswer = new List<char> { };
 List<char> wrongGuess = new List<char> { };
 
-// Call after running code to populate wordAnswer with "_"
-bool gameover(List<char> wrongGuess, List<char> wordAnswer, string[][] gamestate)
+// Gameover conditon that will end main gameloop
+bool gameover(List<char> wrongGuess, List<char> wordAnswer, string[][] gamestate, string secretWord)
 {
     if (wordAnswer.Count > 0 && !wordAnswer.Contains('_'))
     {
@@ -155,6 +145,7 @@ bool gameover(List<char> wrongGuess, List<char> wordAnswer, string[][] gamestate
     else if (wrongGuess.Count >= gamestate.Length-1)
     {
         Console.WriteLine("Sorry, you lost!");
+        Console.WriteLine($"\nThe secret word was: {secretWord.ToUpper()}");
         return true;
     }
     else
@@ -171,7 +162,7 @@ void mainGame()
     wordAnswer = generateAnsweredWord(secretWord, wordAnswer);
 
     // Main Game Loop
-    while (!gameover(wrongGuess, wordAnswer, gamestate))
+    while (!gameover(wrongGuess, wordAnswer, gamestate, secretWord))
     {
         //Player Letter Guess
         char letterGuess = getLetterGuess(wordAnswer, wrongGuess);
@@ -179,10 +170,10 @@ void mainGame()
         // Redraw Board w/Guess and Answered Word Updated
         (wordAnswer, wrongGuess) = updateGamestate(letterGuess, secretWord, wordAnswer, wrongGuess);
         makeGallow(gamestate, wrongGuess);        
-        //logic is wrong because it generates anaswered word draws it and then makes gallow after
+        // Writes out the correct guesses and unknown letters so far
         generateSpacesAndWriteToConsole(wordAnswer);
         
-        // still need to print incorrect guesses at bottom
+        // Prints Wrong Guesses at bottom of console window
         printWrongGuesses(wrongGuess);
     }
     return;
@@ -206,12 +197,13 @@ static char getLetterGuess(List<char> wordAnswer, List<char> wrongGuess)
     while (true)
     {
         Console.WriteLine("\nEnter a valid letter for your guess:");
-        string letter = Console.ReadLine();
+        string? letter = Console.ReadLine();
         if (char.TryParse(letter, out char letterGuess) && isValidLetter(letterGuess))
         {
+            letterGuess = char.ToLower(letterGuess); //converts letterGuess to lower character
             if (!wordAnswer.Contains(letterGuess) && !wrongGuess.Contains(letterGuess))
             {
-                return char.ToLower(letterGuess);
+                return letterGuess;
             }
             else
             {
@@ -242,7 +234,7 @@ static bool isValidLetter(char letter)
     {
         wordAnswer = generateAnsweredWord(secretWord, wordAnswer, letterGuess);
     }
-    // INCORRECT GUESS: Else --> updates wrongGuess & Gamestate (only update gamestate if guess is wrong)
+    // INCORRECT GUESS: Else --> updates wrongGuess
     else
     {
         wrongGuess.Add(letterGuess);
@@ -269,7 +261,7 @@ List<int> letterIndex(char guess, string secretWord)
 // when displaying correct guesses on screen
 void generateSpacesAndWriteToConsole(List<char> wordAnswer)
 {
-    Console.WriteLine("\n   ");
+    Console.Write("   ");
     if (wordAnswer.Count == 0 || !wordAnswer.Any())
     {
         return;
@@ -297,7 +289,7 @@ List<char> generateAnsweredWord(string secretWord, List<char> wordAnswer, char? 
         generateSpacesAndWriteToConsole(wordAnswer);
         return wordAnswer;
     }
-    // Updates wordAndswer and prints to console
+    // Updates wordAnswer
     else if (guess != null)
     {
         foreach (int i in letterIndex(guess.Value, secretWord))
